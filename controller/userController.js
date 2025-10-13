@@ -86,5 +86,15 @@ export function isAdmin(req){
     }
     return true;
 }
+
+export function isCustomer(req){
+    if(req.user == null){
+        return false;
+    }
+    if(req.user.role != "user"){
+        return false;
+    }
+    return true;
+}
  
 
