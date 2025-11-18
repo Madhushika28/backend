@@ -5,10 +5,15 @@ import user from "./models/user.js";
 import product from "./models/product.js";
 import jwt from "jsonwebtoken";
 import productRouter from "./roots/productRouter.js";
+import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express()
+app.use(cors() )
 
-app.use(express.json()) 
+app.use(express.json())
 
 app.use(
     (req,res,next) => {
@@ -18,7 +23,7 @@ app.use(
         if(token != null){
             token = token.replace("Bearer ","")
             console.log(token)
-            jwt.verify(token,"jwt_secret",
+            jwt.verify(token, process.env.JWT_SECRET,
                 (err, decoded)=>{
                    if(decoded == null){
                     res.json({
@@ -35,7 +40,7 @@ app.use(
     }
 )
 
-const connectionstring = "mongodb+srv://admin:root2001@cluster0.mswbyfo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const connectionstring = process.env.MONGO_URI;
 mongoose.connect(connectionstring).then(
     () => {
         console.log("Database connected successfully")
@@ -46,8 +51,8 @@ mongoose.connect(connectionstring).then(
     }   
 )
 
-app.use("/users", userRouter);
-app.use("/products", productRouter);
+app.use("/api/users", userRouter);
+app.use("/api/products", productRouter);
 
 app.listen(5000, 
     () => {

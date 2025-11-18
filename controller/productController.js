@@ -6,6 +6,7 @@ export async function createProduct(req, res) {
         return res.status(403).json({
             message: "You are not authorized to create a product"
         });
+        return;
         
 
 }
