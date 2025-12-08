@@ -152,11 +152,11 @@ export async function getOrders(req, res) {
 
     if(isAdmin(req)){
         const orders = await Order.find().sort({date : -1})
-        res.json(orders)
+        return res.json(orders)
     }else if(isCustomer(req)){
         const user = req.user
         const orders = await Order.find({ email : user.email }).sort({date : -1})
-        res.json(orders)
+        return es.json(orders)
     }else{
         res.status(403).json(
             {
@@ -164,4 +164,11 @@ export async function getOrders(req, res) {
             }
         )
     }
+}
+function isAdmin(req) {
+    return req.user && req.user.role === "admin";
+}
+
+function isCustomer(req) {
+    return req.user && req.user.role === "customer";
 }
