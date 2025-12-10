@@ -1,11 +1,16 @@
 import Order from "../models/order.js";
+import Product from "../models/product.js";
+import { isAdmin, isCustomer } from "./userController.js";
+
 
 export async function createOrder(req, res) {
     console.log("REQ.USER = ", req.user);
 
+    consol
     /*if(req.user == null){
 
         res.status(401).json(
+
             {
                 message : "Unauthenticated user"
             }
@@ -102,7 +107,7 @@ export async function createOrder(req, res) {
                 quantity : item.quantity,
                 name : product.name,
                 price : product.price,
-                image : product.image[0]
+                image : product.images[0]
             })
             total += product.price * item.quantity
         }
@@ -131,7 +136,7 @@ export async function createOrder(req, res) {
         res.status(201).json(
             {
                 message : "Order created successfully",
-                order : savedOrder
+                order: savedOrder
             }
         )
 
@@ -152,11 +157,11 @@ export async function getOrders(req, res) {
 
     if(isAdmin(req)){
         const orders = await Order.find().sort({date : -1})
-        return res.json(orders)
+        res.json(orders)
     }else if(isCustomer(req)){
         const user = req.user
         const orders = await Order.find({ email : user.email }).sort({date : -1})
-        return es.json(orders)
+        res.json(orders)
     }else{
         res.status(403).json(
             {
@@ -164,11 +169,4 @@ export async function getOrders(req, res) {
             }
         )
     }
-}
-function isAdmin(req) {
-    return req.user && req.user.role === "admin";
-}
-
-function isCustomer(req) {
-    return req.user && req.user.role === "customer";
 }
