@@ -215,11 +215,59 @@ export async function googleLogin(req, res) {
         return;
 
     }
-    
 
 
+}
 
+export async function getAllUsers(req, res) {
+    if(!isAdmin(req)){
+        res.status(403).json({
+            message: "UForbidden"
+        })
+        return;
+    }
+    try{
+        const users = await User.find();
+        res.json(users);
+    }catch(err){
+        res.status(500).json({
+            message: "Failed to fetch users"
+        })
+    }
 
+}
+
+export async function blockOrUnblockUser(req, res) {
+    if(!isAdmin(req)){
+        res.status(403).json({
+            message: "Forbidden"
+        })
+        return;
+    }
+    if(req.user.email === req.params.email){
+        res.status(400).json({
+            message: "You cannot block yourself"
+        })
+        return;
+    }
+
+    try{
+        await User.updateOne(
+            {
+                email: req.params.email
+            },{
+                isBlock: req.body.isBlock
+            });
+            res.json({
+                message: "User block status updated successfully"
+            });
+            
+
+    }catch(err){
+        res.status(500).json({
+            message: "Failed to block/unblock user"
+        })
+    }
 }
 
 
