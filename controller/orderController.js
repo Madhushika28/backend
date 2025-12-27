@@ -6,7 +6,7 @@ import { isAdmin, isCustomer } from "./userController.js";
 export async function createOrder(req, res) {
     console.log("REQ.USER = ", req.user);
 
-    consol
+    
     /*if(req.user == null){
 
         res.status(401).json(

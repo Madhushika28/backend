@@ -130,16 +130,19 @@ export function isCustomer(req){
     return true;
 }
 
-export function getUser(req, res) {
-	if (req.user == null) {
-		res.status(401).json({
-			message: "Unauthorized",
-		});
-		return;
-	} else {
-		res.json(req.user);
-	}
+export async function getUser(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const user = await User.findOne(
+    { email: req.user.email },
+    { password: 0 } // hide password
+  );
+
+  res.json(user);
 }
+
 
 export async function googleLogin(req, res) {
     const token = req.body.token;
