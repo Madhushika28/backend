@@ -59,6 +59,11 @@ app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/contact", contactRouter);
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
+
+
 app.listen(5000, 
     () => {
         console.log("Server is running on port 5000");
