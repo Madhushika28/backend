@@ -1,11 +1,20 @@
 import Contact from "../models/contact.js";
 
-// Add a new contact message
+// Public – create message
 export async function createMessage(req, res) {
   try {
     const { firstName, lastName, email, mobile, message } = req.body;
-    const newMessage = new Contact({ firstName, lastName, email, mobile, message });
+
+    const newMessage = new Contact({
+      firstName,
+      lastName,
+      email,
+      mobile,
+      message,
+    });
+
     await newMessage.save();
+
     res.json({ message: "Message sent successfully" });
   } catch (err) {
     console.error(err);
@@ -13,7 +22,7 @@ export async function createMessage(req, res) {
   }
 }
 
-// Get all contact messages (admin only)
+// Admin – get all messages
 export async function getAllMessages(req, res) {
   try {
     const messages = await Contact.find().sort({ createdAt: -1 });

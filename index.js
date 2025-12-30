@@ -9,6 +9,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import orderRouter from "./roots/orderRouter.js";
 import contactRouter from "./roots/contactRouter.js";
+import feedbackRouter from "./roots/feedbackRouter.js";
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/contact", contactRouter);
+app.use("/api/feedback", feedbackRouter);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "OK" });
