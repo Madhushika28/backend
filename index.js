@@ -19,6 +19,55 @@ app.use(cors() )
 
 app.use(express.json())
 
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Cristal Beauty API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: '🎀 Cristal Beauty E-commerce API',
+    version: '1.0.0',
+    status: 'active',
+    documentation: {
+      products: 'GET /api/products',
+      users: 'POST /api/users/register, POST /api/users/login',
+      orders: 'GET /api/orders, POST /api/orders',
+      payments: 'GET /api/payments, POST /api/payments',
+      contact: 'POST /api/contact'
+    },
+    health: 'GET /health'
+  });
+});
+
+// Test route
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'API is working!',
+    success: true 
+  });
+});
+
+// API documentation route
+app.get('/api', (req, res) => {
+  res.json({
+    api: 'Cristal Beauty API v1.0',
+    endpoints: [
+      { path: '/api/products', methods: ['GET', 'POST', 'PUT', 'DELETE'] },
+      { path: '/api/users', methods: ['POST', 'GET'] },
+      { path: '/api/orders', methods: ['GET', 'POST', 'PUT'] },
+      { path: '/api/payments', methods: ['GET', 'POST', 'PUT'] },
+      { path: '/api/contact', methods: ['POST'] },
+      { path: '/api/feedback', methods: ['GET', 'POST'] }
+    ]
+  });
+});
+
 
 app.use(
     (req,res,next) => {
@@ -63,11 +112,9 @@ app.use("/api/contact", contactRouter);
 app.use("/api/feedback", feedbackRouter);
 app.use("/api/payments", paymentRouter);
 
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK" });
-});
 
 
+const PORT = process.env.PORT || 5000;
 app.listen(5000, 
     () => {
         console.log("Server is running on port 5000");
