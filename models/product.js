@@ -27,7 +27,7 @@ const productSchema = new mongoose.Schema(
             required: true,
             validate: {
                 validator: function(v) {
-                    return v.length > 0; // At least one image
+                    return v.length > 0;
                 },
                 message: 'At least one image is required'
             }
@@ -87,10 +87,10 @@ const productSchema = new mongoose.Schema(
     }
 );
 
-// Compound indexes for common queries
+
 productSchema.index({ category: 1, price: 1 });
 productSchema.index({ category: 1, averageRating: -1 });
-productSchema.index({ name: 'text', description: 'text' }); // For text search
+productSchema.index({ name: 'text', description: 'text' }); 
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;

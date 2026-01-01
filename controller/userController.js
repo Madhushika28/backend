@@ -137,7 +137,7 @@ export async function getUser(req, res) {
 
   const user = await User.findOne(
     { email: req.user.email },
-    { password: 0 } // hide password
+    { password: 0 } 
   );
 
   res.json(user);
@@ -311,7 +311,7 @@ export async function sendOTP(req, res) {
         return;
     }
 
-    //100000 - 999999
+    
     const otp = Math.floor(100000 + Math.random() * 900000);
 
     try {

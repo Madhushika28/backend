@@ -1,9 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 
-/**
- * Verify logged-in user (JWT required)
- */
+
 export const verifyUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -17,10 +15,9 @@ export const verifyUser = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    // Decode token
+   
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ❗ Use email (because your JWT contains email, NOT id)
     if (!decoded.email) {
       return res.status(401).json({
         message: "Invalid token payload",
@@ -62,9 +59,7 @@ export const verifyUser = async (req, res, next) => {
   }
 };
 
-/**
- * Verify admin role
- */
+
 export const verifyAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({
@@ -75,9 +70,7 @@ export const verifyAdmin = (req, res, next) => {
   next();
 };
 
-/**
- * Verify customer role
- */
+
 export const verifyCustomer = (req, res, next) => {
   if (!req.user || req.user.role !== "user") {
     return res.status(403).json({

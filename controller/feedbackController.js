@@ -3,7 +3,7 @@ import Product from "../models/product.js";
 import Order from "../models/order.js";
 import { isAdmin, isCustomer } from "./userController.js";
 
-// Calculate and update product rating statistics
+
 async function updateProductRatings(productID) {
     try {
         const feedbacks = await Feedback.find({ 
@@ -29,7 +29,7 @@ async function updateProductRatings(productID) {
         const totalRating = feedbacks.reduce((sum, f) => sum + f.rating, 0);
         const averageRating = totalRating / totalRatings;
 
-        // Calculate rating breakdown
+       
         const ratingBreakdown = { "5": 0, "4": 0, "3": 0, "2": 0, "1": 0 };
         feedbacks.forEach(f => {
             ratingBreakdown[f.rating.toString()]++;
@@ -49,7 +49,7 @@ async function updateProductRatings(productID) {
     }
 }
 
-// Submit feedback/rating
+
 export async function submitFeedback(req, res) {
     try { 
         console.log("=== SUBMIT FEEDBACK REQUEST ===");
@@ -83,7 +83,7 @@ export async function submitFeedback(req, res) {
             });
         }
 
-        // Also ensure it's an integer
+        
         const ratingInt = Math.round(rating);
         if (ratingInt !== rating) {
             return res.status(400).json({ 
@@ -92,7 +92,7 @@ export async function submitFeedback(req, res) {
             });
         }
 
-        // Validate review length
+       
         if (review && review.length > 500) {
             return res.status(400).json({ 
                 message: "Review cannot exceed 500 characters",
@@ -100,7 +100,7 @@ export async function submitFeedback(req, res) {
             });
         }
 
-        // Validate images array if provided
+        
         if (images && (!Array.isArray(images) || images.length > 5)) {
             return res.status(400).json({ 
                 message: "Images must be an array with maximum 5 items",
@@ -108,7 +108,7 @@ export async function submitFeedback(req, res) {
             });
         }
 
-        // Check if product exists
+      
         const product = await Product.findOne({ productID: productID });
         if (!product) {
             return res.status(404).json({ 
@@ -118,10 +118,9 @@ export async function submitFeedback(req, res) {
             });
         }
 
-        // Check if user has purchased this product (optional verification)
         let isVerifiedPurchase = false;
 
-        // Only check for regular users (not admins)
+        
         if (user.role === "user") {
             const order = await Order.findOne({
                 email: user.email,
@@ -132,7 +131,7 @@ export async function submitFeedback(req, res) {
             console.log("Verified purchase check:", isVerifiedPurchase);
         }
 
-        // Check if user already submitted feedback for this product
+       
         const existingFeedback = await Feedback.findOne({
             productID: productID,
             userEmail: user.email
@@ -141,7 +140,7 @@ export async function submitFeedback(req, res) {
 
         let feedback;
         if (existingFeedback) {
-            // Update existing feedback
+            
             feedback = await Feedback.findOneAndUpdate(
                 { productID: productID, userEmail: user.email },
                 {
@@ -155,7 +154,7 @@ export async function submitFeedback(req, res) {
             );
             console.log("Updated feedback:", feedback);
         } else {
-            // Create new feedback
+            
             feedback = new Feedback({
                 productID: productID,
                 userEmail: user.email,
@@ -171,7 +170,7 @@ export async function submitFeedback(req, res) {
             console.log("Created new feedback:", feedback);
         }
 
-        // Update product rating statistics
+        
         await updateProductRatings(productID);
 
         console.log("Product ratings updated");
@@ -191,7 +190,7 @@ export async function submitFeedback(req, res) {
     }
 }
 
-// Get all feedback for a product
+
 export async function getProductFeedback(req, res) {
     try {
         const { productID } = req.params;
@@ -208,17 +207,17 @@ export async function getProductFeedback(req, res) {
             status: "approved"
         };
 
-        // Filter by minimum rating
+       
         if (minRating > 0) {
             query.rating = { $gte: parseInt(minRating) };
         }
 
-        // Filter by images
+        
         if (withImagesOnly === "true") {
             query.images = { $exists: true, $ne: [] };
         }
 
-        // Sort options
+        
         let sort = {};
         switch (sortBy) {
             case "newest":
@@ -249,7 +248,7 @@ export async function getProductFeedback(req, res) {
 
         const total = await Feedback.countDocuments(query);
 
-        // Get user's feedback if logged in
+        
         let userFeedback = null;
         if (req.user) {
             userFeedback = await Feedback.findOne({
@@ -274,7 +273,7 @@ export async function getProductFeedback(req, res) {
         console.error("Error:", error);
         console.error("Error stack:", error.stack);
         
-        // Handle duplicate key error
+    
         if (error.code === 11000) {
             return res.status(400).json({ 
                 message: "You have already submitted feedback for this product",
@@ -282,7 +281,7 @@ export async function getProductFeedback(req, res) {
             });
         }
         
-        // Handle validation errors
+        
         if (error.name === 'ValidationError') {
             return res.status(400).json({ 
                 message: "Validation error: " + Object.values(error.errors).map(e => e.message).join(', '),
@@ -298,7 +297,7 @@ export async function getProductFeedback(req, res) {
     }
 }
 
-// Get feedback statistics for a product
+
 export async function getFeedbackStats(req, res) {
     try {
         const { productID } = req.params;
@@ -346,7 +345,7 @@ export async function getFeedbackStats(req, res) {
             });
         }
 
-        // Calculate rating breakdown
+        
         const breakdown = { "5": 0, "4": 0, "3": 0, "2": 0, "1": 0 };
         stats[0].ratingBreakdown.forEach(rating => {
             breakdown[rating.toString()]++;
@@ -369,7 +368,7 @@ export async function getFeedbackStats(req, res) {
     }
 }
 
-// Mark feedback as helpful
+
 export async function markAsHelpful(req, res) {
     try {
         const { feedbackId } = req.params;
@@ -398,7 +397,7 @@ export async function markAsHelpful(req, res) {
     }
 }
 
-// Admin: Get all feedback (for moderation)
+
 export async function getAllFeedback(req, res) {
     try {
         if (!isAdmin(req)) {
@@ -438,7 +437,7 @@ export async function getAllFeedback(req, res) {
     }
 }
 
-// Admin: Update feedback status
+
 export async function updateFeedbackStatus(req, res) {
     try {
         if (!isAdmin(req)) {
@@ -462,7 +461,7 @@ export async function updateFeedbackStatus(req, res) {
             return res.status(404).json({ message: "Feedback not found" });
         }
 
-        // Update product ratings if status changed
+        
         if (status === "approved" || status === "rejected") {
             await updateProductRatings(feedback.productID);
         }
@@ -481,7 +480,7 @@ export async function updateFeedbackStatus(req, res) {
     }
 }
 
-// Delete user's own feedback
+
 export async function deleteFeedback(req, res) {
     try {
         const user = req.user;
@@ -503,7 +502,7 @@ export async function deleteFeedback(req, res) {
         const productID = feedback.productID;
         await Feedback.deleteOne({ _id: feedbackId });
 
-        // Update product ratings
+        
         await updateProductRatings(productID);
 
         res.json({ message: "Feedback deleted successfully" });

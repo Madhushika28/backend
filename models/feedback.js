@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema({
     productID: {
-        type: String,  // Keep as String since you're using custom IDs
+        type: String,  
         required: true,
-        // Remove ref since it's not ObjectId
+        
     },
     userEmail: {
         type: String,
@@ -75,17 +75,16 @@ const feedbackSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Compound index for unique user feedback per product
+
 feedbackSchema.index({ productID: 1, userEmail: 1 }, { unique: true });
 
-// Index for sorting and filtering
 feedbackSchema.index({ productID: 1, rating: 1 });
 feedbackSchema.index({ productID: 1, createdAt: -1 });
 feedbackSchema.index({ userEmail: 1 });
 feedbackSchema.index({ status: 1 });
 feedbackSchema.index({ isVerifiedPurchase: 1 });
 
-// Add a pre-save hook to ensure rating is integer
+
 feedbackSchema.pre('save', function(next) {
     if (this.rating) {
         this.rating = Math.round(this.rating);

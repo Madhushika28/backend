@@ -1,6 +1,5 @@
 import Contact from "../models/contact.js";
 
-// Public – create message
 export async function createMessage(req, res) {
   try {
     const { firstName, lastName, email, mobile, message } = req.body;
@@ -22,7 +21,7 @@ export async function createMessage(req, res) {
   }
 }
 
-// Admin – get all messages
+
 export async function getAllMessages(req, res) {
   try {
     const messages = await Contact.find().sort({ createdAt: -1 });

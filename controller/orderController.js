@@ -5,43 +5,33 @@ import { isAdmin, isCustomer } from "./userController.js";
 
 export async function createOrder(req, res) {
     console.log("REQ.USER = ", req.user);
-
     
-    /*if(req.user == null){
-
-        res.status(401).json(
-
-            {
-                message : "Unauthenticated user"
-            }
-    )
-        return
-    }*/
-
-    try{
-
+    try {
         const user = req.user
         if(user == null){
-            res.status(401).json(
-                {
-                    message: "Unauthorozed user"
-                }
-            )
+            res.status(401).json({
+                message: "Unauthorized user"
+            })
             return
         }
-        const orderList  = await Order.find().sort({date: -1}).limit(1);
 
-        let newOrderID = "CBC0000001"
-
-        if(orderList.length != 0){
-            let lastOrderIDInString = orderList[0].orderID;
-            let lastOrderIDNumberInString = lastOrderIDInString.replace("CBC", "");
-            let lastOrderNumber = parseInt(lastOrderIDNumberInString);
-            let newOrderNumber = lastOrderNumber + 1;
-
-            let newOrderIDNumberInString = newOrderNumber.toString().padStart(7, '0');
-            newOrderID = "CBC" + newOrderIDNumberInString;
-
+        
+        let newOrderID = req.body.orderID; 
+        
+       
+        if (!newOrderID) {
+            const orderList = await Order.find().sort({date: -1}).limit(1);
+            
+            if(orderList.length != 0){
+                let lastOrderIDInString = orderList[0].orderID;
+                let lastOrderIDNumberInString = lastOrderIDInString.replace("CBC", "");
+                let lastOrderNumber = parseInt(lastOrderIDNumberInString);
+                let newOrderNumber = lastOrderNumber + 1;
+                let newOrderIDNumberInString = newOrderNumber.toString().padStart(7, '0');
+                newOrderID = "CBC" + newOrderIDNumberInString;
+            } else {
+                newOrderID = "CBC0000001";
+            }
         }
 
         let customerName = req.body.customerName;
@@ -56,19 +46,15 @@ export async function createOrder(req, res) {
 
         const itemsInRequest = req.body.items; 
         if(itemsInRequest == null){
-            res.status(400).json(
-                {
-                    message : "Items are required to place an order"
-                }
-            )
+            res.status(400).json({
+                message: "Items are required to place an order"
+            })
             return
         }
         if(!Array.isArray(itemsInRequest)){
-            res.status(400).json(
-                {
-                    message : "Items should be an array"
-                }
-            )
+            res.status(400).json({
+                message: "Items should be an array"
+            })
             return
         }
 
@@ -78,79 +64,79 @@ export async function createOrder(req, res) {
         for(let i=0; i<itemsInRequest.length; i++){
             const item = itemsInRequest[i];
             
-            const product = await Product.findOne({productID : item.productID})
+            const product = await Product.findOne({productID: item.productID})
 
             if(product == null){
-                res.status(400).json(
-                    {
-                        code : "not found",
-                        message : `Product with ID ${item.productID} not found`,
-                        productID : item.productID
-                    }
-                )
+                res.status(400).json({
+                    code: "not found",
+                    message: `Product with ID ${item.productID} not found`,
+                    productID: item.productID
+                })
                 return  
             }
             if(product.stock < item.quantity){
-                res.status(400).json(
-                    {
-                        code : "stock",
-                        message : `Insufficient stock for product ID ${item.productID}`,
-                        productID : item.productID, 
-                        availableStock : product.stock
-                    }
-                )
+                res.status(400).json({
+                    code: "stock",
+                    message: `Insufficient stock for product ID ${item.productID}`,
+                    productID: item.productID, 
+                    availableStock: product.stock
+                })
                 return
             }
             
             itemsToBeAdded.push({
-                productID : product.productID,
-                quantity : item.quantity,
-                name : product.name,
-                price : product.price,
-                image : product.images[0]
+                productID: product.productID,
+                quantity: item.quantity,
+                name: product.name,
+                price: product.price,
+                image: product.images[0]
             })
             total += product.price * item.quantity
         }
 
-
-        const newOrder = new Order({
-            orderID : newOrderID,
-            items : itemsToBeAdded,
-            customerName : customerName,
-            email : user.email,
-            phone : phone,
-            address : req.body.address,
-            total : total
-            
-        });
+const newOrder = new Order({
+    orderID: newOrderID,
+    items: itemsToBeAdded,
+    customerName: customerName,
+    email: user.email,
+    phone: phone,
+    address: req.body.address,
+    total: total,
+    status: 'pending',
+    paymentMethod: req.body.paymentMethod || 'cod',
+    
+    paymentStatus: (req.body.paymentMethod === 'credit_card' || req.body.paymentMethod === 'debit_card') 
+        ? 'paid' 
+        : 'pending',
+    
+    paymentDetails: req.body.paymentDetails || {}
+});
+        
         const savedOrder = await newOrder.save()
 
-       /* for(let i=0; i<itemsToBeAdded.length; i++){
+        // Uncomment to update stock
+        /*
+        for(let i=0; i<itemsToBeAdded.length; i++){
             const item = itemsToBeAdded[i];
             await Product.updateOne(
-                { productID : item.productID },
+                { productID: item.productID },
                 { $inc: { stock: -item.quantity } }
             )
-        }*/
+        }
+        */
 
-        res.status(201).json(
-            {
-                message : "Order created successfully",
-                order: savedOrder
-            }
-        )
+        res.status(201).json({
+            message: "Order created successfully",
+            order: savedOrder,
+            orderID: savedOrder.orderID 
+        })
 
-    }catch(err){
+    } catch(err) {
         console.log(err);
-        res.status(500).json(
-            {
-                message : "Internal server error"
-            }
-        )
-
+        res.status(500).json({
+            message: "Internal server error"
+        })
     }
-
-
 }
 
 export async function getOrders(req, res) {
