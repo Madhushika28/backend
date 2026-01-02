@@ -1,8 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
 import userRouter from "./roots/userRouter.js";
-import user from "./models/user.js";
-import product from "./models/product.js";
 import jwt from "jsonwebtoken";
 import productRouter from "./roots/productRouter.js";
 import cors from "cors";
@@ -10,15 +8,39 @@ import dotenv from "dotenv";
 import orderRouter from "./roots/orderRouter.js";
 import contactRouter from "./roots/contactRouter.js";
 import feedbackRouter from "./roots/feedbackRouter.js";
-import paymentRouter from "./roots/paymentRouter.js";
+import paymentRouter from "./roots/paymentRouter.js"; // Make sure this is imported!
 
 dotenv.config();
 
-const app = express()
-app.use(cors() )
+const app = express();
 
-app.use(express.json())
+// ✅ FIXED CORS
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://your-frontend-domain.com'],
+  credentials: true
+}));
 
+app.use(express.json());
+
+// ✅ FIXED AUTH MIDDLEWARE
+app.use((req, res, next) => {
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
+        } catch (error) {
+            console.log("Invalid token:", error.message);
+            // Don't block - just continue without user
+        }
+    }
+    next();
+});
+
+// ✅ ADD BACK THESE ROUTES:
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -45,82 +67,43 @@ app.get('/', (req, res) => {
   });
 });
 
-// Test route
-app.get('/test', (req, res) => {
-  res.json({ 
-    message: 'API is working!',
-    success: true 
-  });
-});
-
-// API documentation route
-app.get('/api', (req, res) => {
-  res.json({
-    api: 'Cristal Beauty API v1.0',
-    endpoints: [
-      { path: '/api/products', methods: ['GET', 'POST', 'PUT', 'DELETE'] },
-      { path: '/api/users', methods: ['POST', 'GET'] },
-      { path: '/api/orders', methods: ['GET', 'POST', 'PUT'] },
-      { path: '/api/payments', methods: ['GET', 'POST', 'PUT'] },
-      { path: '/api/contact', methods: ['POST'] },
-      { path: '/api/feedback', methods: ['GET', 'POST'] }
-    ]
-  });
-});
-
-
-app.use(
-    (req,res,next) => {
-
-        let token = req.header("Authorization")
-
-        if(token != null){
-            token = token.replace("Bearer ","")
-            console.log(token)
-            jwt.verify(token, process.env.JWT_SECRET,
-                (err, decoded)=>{
-                   if(decoded == null){
-                    res.json({
-                        message: "Invalid token please login again"
-                    })
-                    return
-                   }else{
-                    req.user = decoded
-                   }
-                })
-        }
-        next()
-
-    }
-)
-
+// ✅ IMPORTANT: Connect to database BEFORE routes
 const connectionstring = process.env.MONGO_URI;
 mongoose.connect(connectionstring).then(
     () => {
-        console.log("Database connected successfully")
+        console.log("✅ Database connected successfully");
     }   
 ).catch(
-    () => {
-        console.log("Database connection failed")
+    (error) => {
+        console.log("❌ Database connection failed:", error.message);
     }   
-)
+);
 
+// ✅ MOUNT ALL YOUR ROUTES
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/feedback", feedbackRouter);
-app.use("/api/payments", paymentRouter);
+app.use("/api/payments", paymentRouter); // Don't forget this!
 
+// ✅ ADD 404 HANDLER FOR UNKNOWN API ROUTES
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ 
+        message: 'API endpoint not found',
+        path: req.originalUrl 
+    });
+});
 
+// ✅ CATCH ALL ROUTE
+app.use('*', (req, res) => {
+    res.status(404).json({ 
+        message: 'Route not found',
+        available: ['/', '/health', '/api/products', '/api/users', '/api/orders', '/api/payments']
+    });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`✅ Server is running on port ${PORT}`);
 });
-
-
-
-
-
-
